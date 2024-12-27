@@ -1,7 +1,7 @@
 // Firebase SDK imports
 import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
 import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
-import { getDatabase, ref, set, push, get, update } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+import { getDatabase, ref, set, push, get, update, remove } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
 import { firebaseConfig } from "./server.js";
 
 // Initialize Firebase
@@ -20,6 +20,7 @@ const loginBtn = document.getElementById("login-btn");
 const signupBtn = document.getElementById("signup-btn");
 const showSignupFormBtn = document.getElementById("show-signup-form");
 const submitFormBtn = document.getElementById("submit-form-btn");
+const deleteBtn = document.getElementById("delete-btn");
 const searchBar = document.getElementById("search-bar");
 
 let loggedIn = false;
@@ -45,6 +46,12 @@ function showAddPlateForm() {
     addPlateContainer.style.display = 'block';
     loginFormContainer.style.display = 'none';
     signupFormContainer.style.display = 'none';
+
+    if (currentPlateId) {
+        deleteBtn.style.display = 'inline-block'; // Show delete button when editing
+    } else {
+        deleteBtn.style.display = 'none'; // Hide delete button when adding
+    }
 }
 
 // Function to log in the user with Firebase Authentication
@@ -59,7 +66,8 @@ function loginUser() {
                 userData = userCredential.user;
                 alert("Login successful!");
                 loginFormContainer.style.display = "none";
-                addPlateContainer.style.display = "block"
+                addPlateContainer.style.display = "block";
+                deleteBtn.style.display = "none";
                 loadPlateInventory(); // Load the plate inventory after login
             })
             .catch(error => {
@@ -89,22 +97,31 @@ function signupUser() {
     }
 }
 
-// Function to load plate inventory from Firebase Realtime Database
+// Function to load plate inventory with sorting
 function loadPlateInventory() {
-    // Clear current rows (except header)
-    const rows = plateInventoryTable.getElementsByTagName('tr');
-    for (let i = rows.length - 1; i > 0; i--) {
-        plateInventoryTable.deleteRow(i);
-    }
-
-    // Fetch plates from Realtime Database
     const platesRef = ref(db, 'plates');
+
     get(platesRef)
         .then(snapshot => {
             if (snapshot.exists()) {
                 const plates = snapshot.val();
-                for (let plateId in plates) {
-                    const plate = plates[plateId];
+
+                // Clear current rows in the table (except the header)
+                const rows = plateInventoryTable.getElementsByTagName('tr');
+                for (let i = rows.length - 1; i > 0; i--) {
+                    plateInventoryTable.deleteRow(i);
+                }
+
+                // Sort plates alphabetically by productName (or partNumber)
+                const sortedPlates = Object.keys(plates).map(plateId => {
+                    return { id: plateId, ...plates[plateId] };
+                }).sort((a, b) => {
+                    // Sort by productName alphabetically (case-insensitive)
+                    return a.productName.toLowerCase().localeCompare(b.productName.toLowerCase());
+                });
+
+                // Populate table with sorted plates
+                sortedPlates.forEach(plate => {
                     const newRow = plateInventoryTable.insertRow();
                     newRow.insertCell(0).innerText = plate.partNumber;
                     newRow.insertCell(1).innerText = plate.productName;
@@ -112,19 +129,18 @@ function loadPlateInventory() {
                     newRow.insertCell(3).innerText = plate.customerName;
                     newRow.insertCell(4).innerText = plate.personSaved;
 
-                    // Add event listener for editing plate when row is clicked
-                    newRow.addEventListener('click', function() {
-                        // Set the current plate ID and populate the form with the data
-                        currentPlateId = plateId;
+                    // Add event listener for editing plate
+                    newRow.addEventListener('click', function () {
+                        currentPlateId = plate.id;
                         document.getElementById("part-number").value = plate.partNumber;
                         document.getElementById("product-name").value = plate.productName;
                         document.getElementById("plate-location").value = plate.plateLocation;
                         document.getElementById("customer-name").value = plate.customerName;
                         document.getElementById("person-saved").value = plate.personSaved;
 
-                        showAddPlateForm(); // Show the add plate form with the current plate data
+                        showAddPlateForm(); // Show the form with current plate data
                     });
-                }
+                });
             } else {
                 alert("No plates available in the database.");
             }
@@ -132,6 +148,23 @@ function loadPlateInventory() {
         .catch(error => {
             alert("Error fetching plates: " + error.message);
         });
+}
+
+// Function to delete the current plate
+function deletePlate() {
+    if (currentPlateId) {
+        const plateRef = ref(db, 'plates/' + currentPlateId);
+        remove(plateRef)
+            .then(() => {
+                alert("Plate deleted successfully!");
+                currentPlateId = null;
+                loadPlateInventory(); // Refresh the inventory table
+                addPlateContainer.style.display = 'none';
+            })
+            .catch(error => {
+                alert("Error deleting plate: " + error.message);
+            });
+    }
 }
 
 // Function to submit the add plate form to Firebase Realtime Database (used for both add and edit)
@@ -191,6 +224,7 @@ function submitPlateForm(event) {
 
     // Reset current plate ID after submission
     currentPlateId = null;
+    addPlateContainer.style.display = 'none';
 }
 
 // Function to filter the table based on the search bar
@@ -239,11 +273,16 @@ closeFormBtn.addEventListener("click", (event) => {
     document.getElementById("plate-location").value = "";
     document.getElementById("customer-name").value = "";
     document.getElementById("person-saved").value = "";
+    currentPlateId = null;
     addPlateContainer.style.display = 'none';
-
 });
 
 submitFormBtn.addEventListener("click", submitPlateForm);
+
+deleteBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    deletePlate();
+});
 
 searchBar.addEventListener("input", filterPlateInventory);
 
