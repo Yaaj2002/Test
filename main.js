@@ -1,0 +1,251 @@
+// Firebase SDK imports
+import { initializeApp } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-app.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-auth.js";
+import { getDatabase, ref, set, push, get, update } from "https://www.gstatic.com/firebasejs/11.1.0/firebase-database.js";
+import { firebaseConfig } from "./server.js";
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+
+// Get DOM elements
+const loginFormContainer = document.getElementById("login-form-container");
+const signupFormContainer = document.getElementById("signup-form-container");
+const addPlateContainer = document.getElementById("add-plate-container");
+const plateInventoryTable = document.getElementById("plate-inventory");
+const addPlateBtn = document.getElementById("add-plate-btn");
+const closeFormBtn = document.getElementById("close-form-btn");
+const loginBtn = document.getElementById("login-btn");
+const signupBtn = document.getElementById("signup-btn");
+const showSignupFormBtn = document.getElementById("show-signup-form");
+const submitFormBtn = document.getElementById("submit-form-btn");
+const searchBar = document.getElementById("search-bar");
+
+let loggedIn = false;
+let userData = {}; // Placeholder for storing user data
+let currentPlateId = null; // Store the current plate ID for editing
+
+// Function to show the appropriate form
+function showLoginForm() {
+    loginFormContainer.style.display = 'block';
+    signupFormContainer.style.display = 'none';
+    addPlateContainer.style.display = 'none';
+}
+
+// Function to show signup form
+function showSignupForm() {
+    loginFormContainer.style.display = 'none';
+    signupFormContainer.style.display = 'block';
+    addPlateContainer.style.display = 'none';
+}
+
+// Function to show the add plate form (used for both adding and editing)
+function showAddPlateForm() {
+    addPlateContainer.style.display = 'block';
+    loginFormContainer.style.display = 'none';
+    signupFormContainer.style.display = 'none';
+}
+
+// Function to log in the user with Firebase Authentication
+function loginUser() {
+    const username = document.getElementById('login-username').value;
+    const password = document.getElementById('login-password').value;
+
+    if (username && password) {
+        signInWithEmailAndPassword(auth, username, password)
+            .then(userCredential => {
+                loggedIn = true;
+                userData = userCredential.user;
+                alert("Login successful!");
+                loginFormContainer.style.display = "none";
+                addPlateContainer.style.display = "block"
+                loadPlateInventory(); // Load the plate inventory after login
+            })
+            .catch(error => {
+                alert("Error logging in: " + error.message);
+            });
+    } else {
+        alert("Please enter a valid username and password.");
+    }
+}
+
+// Function to sign up the user with Firebase Authentication
+function signupUser() {
+    const username = document.getElementById('signup-username').value;
+    const password = document.getElementById('signup-password').value;
+
+    if (username && password) {
+        createUserWithEmailAndPassword(auth, username, password)
+            .then(userCredential => {
+                alert("Signup successful!");
+                showLoginForm();
+            })
+            .catch(error => {
+                alert("Error signing up: " + error.message);
+            });
+    } else {
+        alert("Please enter a valid username and password.");
+    }
+}
+
+// Function to load plate inventory from Firebase Realtime Database
+function loadPlateInventory() {
+    // Clear current rows (except header)
+    const rows = plateInventoryTable.getElementsByTagName('tr');
+    for (let i = rows.length - 1; i > 0; i--) {
+        plateInventoryTable.deleteRow(i);
+    }
+
+    // Fetch plates from Realtime Database
+    const platesRef = ref(db, 'plates');
+    get(platesRef)
+        .then(snapshot => {
+            if (snapshot.exists()) {
+                const plates = snapshot.val();
+                for (let plateId in plates) {
+                    const plate = plates[plateId];
+                    const newRow = plateInventoryTable.insertRow();
+                    newRow.insertCell(0).innerText = plate.partNumber;
+                    newRow.insertCell(1).innerText = plate.productName;
+                    newRow.insertCell(2).innerText = plate.plateLocation;
+                    newRow.insertCell(3).innerText = plate.customerName;
+                    newRow.insertCell(4).innerText = plate.personSaved;
+
+                    // Add event listener for editing plate when row is clicked
+                    newRow.addEventListener('click', function() {
+                        // Set the current plate ID and populate the form with the data
+                        currentPlateId = plateId;
+                        document.getElementById("part-number").value = plate.partNumber;
+                        document.getElementById("product-name").value = plate.productName;
+                        document.getElementById("plate-location").value = plate.plateLocation;
+                        document.getElementById("customer-name").value = plate.customerName;
+                        document.getElementById("person-saved").value = plate.personSaved;
+
+                        showAddPlateForm(); // Show the add plate form with the current plate data
+                    });
+                }
+            } else {
+                alert("No plates available in the database.");
+            }
+        })
+        .catch(error => {
+            alert("Error fetching plates: " + error.message);
+        });
+}
+
+// Function to submit the add plate form to Firebase Realtime Database (used for both add and edit)
+function submitPlateForm(event) {
+    event.preventDefault(); // Prevent form from reloading the page
+
+    const partNumber = document.getElementById("part-number").value;
+    const productName = document.getElementById("product-name").value;
+    const plateLocation = document.getElementById("plate-location").value;
+    const customerName = document.getElementById("customer-name").value;
+    const personSaved = document.getElementById("person-saved").value;
+
+    const platesRef = ref(db, 'plates');
+
+    if (currentPlateId) {
+        // Update the existing plate
+        const plateRef = ref(db, 'plates/' + currentPlateId);
+        update(plateRef, {
+            partNumber: partNumber,
+            productName: productName,
+            plateLocation: plateLocation,
+            customerName: customerName,
+            personSaved: personSaved
+        })
+            .then(() => {
+                alert("Plate updated successfully!");
+                loadPlateInventory();  // Refresh the inventory table
+            })
+            .catch(error => {
+                alert("Error updating plate: " + error.message);
+            });
+    } else {
+        // Add new plate
+        const newPlateRef = push(platesRef);
+        set(newPlateRef, {
+            partNumber: partNumber,
+            productName: productName,
+            plateLocation: plateLocation,
+            customerName: customerName,
+            personSaved: personSaved
+        })
+            .then(() => {
+                alert("Plate added successfully!");
+                loadPlateInventory();  // Refresh the inventory table
+            })
+            .catch(error => {
+                alert("Error adding plate: " + error.message);
+            });
+    }
+
+    // Clear form fields after submission
+    document.getElementById("part-number").value = "";
+    document.getElementById("product-name").value = "";
+    document.getElementById("plate-location").value = "";
+    document.getElementById("customer-name").value = "";
+    document.getElementById("person-saved").value = "";
+
+    // Reset current plate ID after submission
+    currentPlateId = null;
+}
+
+// Function to filter the table based on the search bar
+function filterPlateInventory() {
+    const searchQuery = searchBar.value.toLowerCase();
+    const rows = plateInventoryTable.getElementsByTagName('tr');
+
+    for (let i = 1; i < rows.length; i++) { // Skip the header row
+        const cells = rows[i].getElementsByTagName('td');
+        let matchFound = false;
+        for (let j = 0; j < cells.length; j++) {
+            if (cells[j].innerText.toLowerCase().includes(searchQuery)) {
+                matchFound = true;
+                break;
+            }
+        }
+        rows[i].style.display = matchFound ? '' : 'none';
+    }
+}
+
+// Event listeners
+loginBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    loginUser();
+});
+
+signupBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    signupUser();
+});
+
+showSignupFormBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    showSignupForm();
+});
+
+addPlateBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    showAddPlateForm();
+});
+
+closeFormBtn.addEventListener("click", (event) => {
+    event.preventDefault();
+    document.getElementById("part-number").value = "";
+    document.getElementById("product-name").value = "";
+    document.getElementById("plate-location").value = "";
+    document.getElementById("customer-name").value = "";
+    document.getElementById("person-saved").value = "";
+    addPlateContainer.style.display = 'none';
+
+});
+
+submitFormBtn.addEventListener("click", submitPlateForm);
+
+searchBar.addEventListener("input", filterPlateInventory);
+
+// Initially show login form
+showLoginForm();

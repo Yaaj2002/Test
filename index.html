@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Test</title>
+    <link href='/style.css' rel='stylesheet'>
+    <script src="https://kit.fontawesome.com/5775ec7e3b.js" crossorigin="anonymous"></script>
+</head>
+
+<body>
+    <header>
+        <h1 class="header">Test</h1>
+        <input type="text" class="search" id="search-bar" placeholder="Search for Plate...">
+        <div class="nav-bar" id="nav-bar">
+            <button id="add-plate-btn">Add Plate</button>
+            <button id="logout">Logout</button>
+        </div>
+    </header>
+    <div id="login-form-container">
+        <form id="login-form">
+            <h2>Login</h2>
+            <label for="login-username">Username:</label>
+            <input type="text" id="login-username">
+            <label for="login-password">Password:</label>
+            <input type="text" id="login-password">
+            <button id="login-btn">Login</button>
+            <button id="show-signup-form">Signup</button>
+        </form>
+    </div>
+
+    <div id="signup-form-container">
+        <form id="signup-form">
+            <h2>Signup</h2>
+            <label for="signup-username">Username:</label>
+            <input type="text" id="signup-username">
+            <label for="signup-password">Password:</label>
+            <input type="text" id="signup-password">
+            <button id="signup-btn">Login</button>
+        </form>
+    </div>
+
+    <div id="add-plate-container">
+        <div id="add-plate-header">
+            <h2>Add Plate</h2>
+            <i class="fa-solid fa-xmark" id="close-form-btn"></i>
+        </div>
+        <form action="submit" id="add-plate-form">
+            <label for="part-number">Part Number:</label>
+            <input type="text" id="part-number">
+            <label for="product-name">Product Name:</label>
+            <input type="text" id="product-name">
+            <label for="plate-location">Plate Location:</label>
+            <input type="text" id="plate-location">
+            <label for="customer-name">Customer:</label>
+            <input type="text" id="customer-name">
+            <label for="person-saved">Saved by?</label>
+            <input type="text" id="person-saved">
+            <button id="submit-form-btn">Submit</button>
+        </form>
+    </div>
+    <table id="plate-inventory">
+        <h1>Plate Inventory</h1>
+        <thead>
+            <th>Part Number</th>
+            <th>Product Name</th>
+            <th>Plate Location</th>
+            <th>Customer</th>
+            <th>Saved by</th>
+        </thead>
+        <tbody>
+            
+            <tr id="auto-populate-info">
+
+            </tr>
+        </tbody>
+    </table>
+    <script defer type="module" src="/main.js"></script>
+</body>
+
+</html>
