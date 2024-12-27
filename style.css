@@ -182,19 +182,21 @@ tr:hover {
 }
 
 /* Responsive Design */
+
+/* Tablets */
 @media (max-width: 1024px) {
   header {
-    padding: 10px;
+    padding: 15px;
   }
 
   .header {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
     text-align: center;
   }
 
   #search-bar {
     width: 100%;
-    max-width: 200px; /* Reduce the width of the search bar on tablets */
+    max-width: 250px; /* Reduce the width of the search bar on tablets */
   }
 
   .nav-bar {
@@ -206,13 +208,22 @@ tr:hover {
 
   .search {
     width: 100%;
-    max-width: 300px;
+    max-width: 250px;
     margin: 10px 0;
+  }
+
+  table {
+    font-size: 14px;
+  }
+
+  th, td {
+    padding: 8px;
   }
 }
 
+/* Small Screens (Mobile Landscape) */
 @media (max-width: 768px) {
-  .header {
+  header {
     flex-direction: column;
     align-items: center;
   }
@@ -234,6 +245,8 @@ tr:hover {
 
   table {
     font-size: 14px;
+    overflow-x: auto;
+    display: block; /* Enable horizontal scrolling */
   }
 
   th, td {
@@ -265,9 +278,10 @@ tr:hover {
   }
 }
 
+/* Small Screens (Mobile Portrait) */
 @media (max-width: 480px) {
   .header {
-    font-size: 1.2rem; /* Smaller font size for smaller screens */
+    font-size: 1.4rem; /* Smaller font size for smaller screens */
   }
 
   #search-bar {
@@ -295,5 +309,28 @@ tr:hover {
   button {
     padding: 12px;
     font-size: 0.9rem;
+  }
+
+  #login-form-container,
+  #signup-form-container,
+  #add-plate-container {
+    padding: 15px;
+    width: 90%;
+    max-width: 300px;
+  }
+
+  .nav-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  #add-plate-header {
+    width: 100%;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #close-form-btn {
+    font-size: 1.2rem;
   }
 }
