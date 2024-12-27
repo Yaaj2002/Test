@@ -183,14 +183,14 @@ tr:hover {
 
 /* Responsive Design */
 
-/* Tablets */
+/* Tablets and Small Laptops */
 @media (max-width: 1024px) {
   header {
     padding: 15px;
   }
 
   .header {
-    font-size: 1.6rem;
+    font-size: 1.8rem;
     text-align: center;
   }
 
@@ -332,5 +332,60 @@ tr:hover {
 
   #close-form-btn {
     font-size: 1.2rem;
+  }
+}
+
+/* Adjustments for iPhone 14 Pro Max (and similar large phones) */
+@media (max-width: 932px) {
+  header {
+    padding: 10px;
+  }
+
+  .header {
+    font-size: 1.7rem;
+  }
+
+  .nav-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 15px;
+  }
+
+  #search-bar {
+    width: 100%;
+    max-width: 350px; /* Expand the search bar for larger mobile screens */
+  }
+
+  .search {
+    width: 100%;
+    max-width: 350px;
+  }
+
+  table {
+    font-size: 16px; /* Larger font size for readability on larger screens */
+  }
+
+  th, td {
+    padding: 10px;
+  }
+
+  button {
+    width: 100%;
+    padding: 14px;
+  }
+
+  #add-plate-container {
+    width: 90%;
+    max-width: 400px;
+  }
+
+  #add-plate-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  #close-form-btn {
+    font-size: 1.5rem;
   }
 }
