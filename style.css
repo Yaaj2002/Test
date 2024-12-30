@@ -212,6 +212,11 @@ tr:hover {
   body {
       padding: 10px;
   }
+  
+  header{
+    display:flex;
+    flex-direction: column;
+  }
 
   .header {
       font-size: 1.5rem;
